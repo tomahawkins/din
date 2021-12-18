@@ -8,7 +8,7 @@ module Din
 
 
 main :: IO ()
-main = print $ din MK HL SkierType3 Age1 Bsl5
+main = print $ din MassK HeightL SkierType3 Age1 Bsl5
 
 
 -- | Skier's type: -1, 1, 2, 3, and 3+.
@@ -22,29 +22,29 @@ data SkierType
 
 -- | Skier's mass.
 data Mass
-  = MA  -- ^ 22-29 lbs / 10-13 kg
-  | MB  -- ^ 30-38 lbs / 14-17 kg
-  | MC  -- ^ 39-47 lbs / 18-21 kg
-  | MD  -- ^ 48-56 lbs / 22-25 kg
-  | ME  -- ^ 57-66 lbs / 26-30 kg
-  | MF  -- ^ 67-78 lbs / 31-35 kg
-  | MG  -- ^ 79-91 lbs / 36-41 kg
-  | MH  -- ^ 92-107 lbs / 42-48 kg
-  | MI  -- ^ 108-125 lbs / 49-57 kg
-  | MJ  -- ^ 126-147 lbs / 58-66 kg
-  | MK  -- ^ 148-174 lbs / 67-78 kg
-  | ML  -- ^ 175-209 lbs / 79-94 kg
-  | MM  -- ^ 210+ lbs / 95+ kg
+  = MassA  -- ^ 22-29 lbs / 10-13 kg
+  | MassB  -- ^ 30-38 lbs / 14-17 kg
+  | MassC  -- ^ 39-47 lbs / 18-21 kg
+  | MassD  -- ^ 48-56 lbs / 22-25 kg
+  | MassE  -- ^ 57-66 lbs / 26-30 kg
+  | MassF  -- ^ 67-78 lbs / 31-35 kg
+  | MassG  -- ^ 79-91 lbs / 36-41 kg
+  | MassH  -- ^ 92-107 lbs / 42-48 kg
+  | MassI  -- ^ 108-125 lbs / 49-57 kg
+  | MassJ  -- ^ 126-147 lbs / 58-66 kg
+  | MassK  -- ^ 148-174 lbs / 67-78 kg
+  | MassL  -- ^ 175-209 lbs / 79-94 kg
+  | MassM  -- ^ 210+ lbs / 95+ kg
 
 
 -- | Skier's height.
 data Height
-  = HH  -- ^ Less than 4'10" / 148 cm
-  | HI  -- ^ 4'11" - 5'1" / 149-157 cm
-  | HJ  -- ^ 5'2" - 5'5" / 158-166 cm
-  | HK  -- ^ 5'6" - 5'10" / 167-178 cm
-  | HL  -- ^ 5'11 - 6'5" / 179-194 cm
-  | HM  -- ^ More than 6'5" / 195 cm
+  = HeightH  -- ^ Less than 4'10" / 148 cm
+  | HeightI  -- ^ 4'11" - 5'1" / 149-157 cm
+  | HeightJ  -- ^ 5'2" - 5'5" / 158-166 cm
+  | HeightK  -- ^ 5'6" - 5'10" / 167-178 cm
+  | HeightL  -- ^ 5'11 - 6'5" / 179-194 cm
+  | HeightM  -- ^ More than 6'5" / 195 cm
 
 
 -- | Skier code: A - O.
@@ -108,30 +108,30 @@ newtype Index = Index { unIndex :: Int } deriving (Num, Eq, Ord)
 -- | Skier code given mass.
 skierCodeMass :: Mass -> SkierCode
 skierCodeMass = \case
-  MA -> A
-  MB -> B
-  MC -> C
-  MD -> D
-  ME -> E
-  MF -> F
-  MG -> G
-  MH -> H
-  MI -> I
-  MJ -> J
-  MK -> K
-  ML -> L
-  MM -> M
+  MassA -> A
+  MassB -> B
+  MassC -> C
+  MassD -> D
+  MassE -> E
+  MassF -> F
+  MassG -> G
+  MassH -> H
+  MassI -> I
+  MassJ -> J
+  MassK -> K
+  MassL -> L
+  MassM -> M
 
 
 -- | Skier code given height.
 skierCodeHeight :: Height -> SkierCode
 skierCodeHeight = \case
-  HH -> H
-  HI -> I
-  HJ -> J
-  HK -> K
-  HL -> L
-  HM -> M
+  HeightH -> H
+  HeightI -> I
+  HeightJ -> J
+  HeightK -> K
+  HeightL -> L
+  HeightM -> M
 
 
 -- | Skier code given mass and height.
@@ -180,9 +180,9 @@ adjustIndexForSkierType skierType index = case skierType of
 -- | Limit skier type based on mass.  NOTE 2.
 limitSkierType :: Mass -> SkierType -> SkierType
 limitSkierType mass skierType = case (mass, skierType) of
-  (MA, SkierType1Minus) -> SkierType1
-  (MB, SkierType1Minus) -> SkierType1
-  _                     -> skierType
+  (MassA, SkierType1Minus) -> SkierType1
+  (MassB, SkierType1Minus) -> SkierType1
+  _                        -> skierType
 
 
 -- | Lookup the final DIN setting given a BSL and a DIN vector.
