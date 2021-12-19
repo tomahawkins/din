@@ -1,5 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 
 module Din
@@ -7,8 +8,16 @@ module Din
   ) where
 
 
+import           Data.Text                      ( Text
+                                                , pack
+                                                , unpack
+                                                )
+import qualified Data.Text                     as T
+
+
+-- | Print out the Javascript testcases.
 main :: IO ()
-main = print $ din MassK HeightL SkierType3 Age1 Bsl5
+main = putStrLn $ unpack jsTests
 
 
 -- | Skier's type: -1, 1, 2, 3, and 3+.
@@ -18,6 +27,7 @@ data SkierType
   | SkierType2
   | SkierType3
   | SkierType3Plus
+  deriving (Show, Enum)
 
 
 -- | Skier's mass.
@@ -35,6 +45,7 @@ data Mass
   | MassK  -- ^ 148-174 lbs / 67-78 kg
   | MassL  -- ^ 175-209 lbs / 79-94 kg
   | MassM  -- ^ 210+ lbs / 95+ kg
+  deriving (Show, Enum)
 
 
 -- | Skier's height.
@@ -45,6 +56,7 @@ data Height
   | HeightK  -- ^ 5'6" - 5'10" / 167-178 cm
   | HeightL  -- ^ 5'11 - 6'5" / 179-194 cm
   | HeightM  -- ^ More than 6'5" / 195 cm
+  deriving (Show, Enum)
 
 
 -- | Skier code: A - O.
@@ -77,6 +89,7 @@ data Bsl
   | Bsl5  -- ^ 311-330 mm
   | Bsl6  -- ^ 331-350 mm
   | Bsl7  -- ^ More than 351 mm
+  deriving (Show, Enum)
 
 
 -- | Skier's age.
@@ -84,7 +97,7 @@ data Age
   = Age0  -- ^ 9 and under.
   | Age1  -- ^ 10 - 49.
   | Age2  -- ^ 50 and older.
-  deriving Eq
+  deriving (Show, Eq, Enum)
 
 
 -- | A DIN vector is composed of 8 DIN values corresponding to the 8 possible BSL values.
@@ -247,5 +260,114 @@ din mass height skierType age bsl = lookupDin bsl $ dinTable !! unIndex index4
   -- Set the index based on NOTE 1.
   index4 | age == Age0 = index0
          | otherwise   = index3
+
+
+-- | Generate all Javascript testcases.
+jsTests :: Text
+jsTests = T.unlines
+  [ jsTest mass height skierType' age bsl
+  | mass <- [MassA .. MassM]
+  , height <- [HeightH .. HeightM]
+  , skierType' <- [SkierType1Minus .. SkierType3Plus]
+  , age <- [Age0 .. Age2]
+  , bsl <- [Bsl0 .. Bsl7]
+  ]
+
+
+-- | Generate a single Javascript testcase.
+jsTest :: Mass -> Height -> SkierType -> Age -> Bsl -> Text
+jsTest mass height skierType age bsl =
+  "if (" <> callCalculateDin
+    <>  " != "
+    <>  encodedResult
+    <>  ") { console.log(\"FAIL: "
+    <>  T.intercalate " " 
+    [ "din"
+    , showT mass
+    , showT height
+    , showT skierType
+    , showT age
+    , showT bsl
+    , "=="
+    , showT result
+    , "but got "
+    ]
+    <>  "\" + " <> callCalculateDin <> "); };"
+
+ where
+
+  callCalculateDin = "calculate_din("
+    <>  T.intercalate ", " 
+    [ encode mass
+    , encode height
+    , encode skierType
+    , encode age
+    , encode bsl
+    ]
+    <> ")"
+
+  result = din mass height skierType age bsl
+
+  encodedResult = case result of
+    Nothing   -> "null"
+    Just din' -> showT din'
+
+
+showT :: Show a => a -> Text
+showT = pack . show
+
+
+class Encode a where
+  encode :: a -> Text
+
+instance Encode Mass where
+  encode = \case
+    MassA -> "0"
+    MassB -> "1"
+    MassC -> "2"
+    MassD -> "3"
+    MassE -> "4"
+    MassF -> "5"
+    MassG -> "6"
+    MassH -> "7"
+    MassI -> "8"
+    MassJ -> "9"
+    MassK -> "10"
+    MassL -> "11"
+    MassM -> "12"
+
+instance Encode Height where
+  encode = \case
+    HeightH -> "0"
+    HeightI -> "1"
+    HeightJ -> "2"
+    HeightK -> "3"
+    HeightL -> "4"
+    HeightM -> "5"
+
+instance Encode SkierType where
+  encode = \case
+    SkierType1Minus -> "0"
+    SkierType1      -> "1"
+    SkierType2      -> "2"
+    SkierType3      -> "3"
+    SkierType3Plus  -> "4"
+
+instance Encode Age where
+  encode = \case
+    Age0 -> "0"
+    Age1 -> "1"
+    Age2 -> "2"
+
+instance Encode Bsl where
+  encode = \case
+    Bsl0 -> "0"
+    Bsl1 -> "1"
+    Bsl2 -> "2"
+    Bsl3 -> "3"
+    Bsl4 -> "4"
+    Bsl5 -> "5"
+    Bsl6 -> "6"
+    Bsl7 -> "7"
 
 
