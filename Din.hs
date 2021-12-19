@@ -262,11 +262,15 @@ din mass height skierType age bsl = lookupDin bsl $ dinTable !! unIndex index4
          | otherwise   = index3
 
 
--- | Generate all Javascript testcases.
-jsTests :: Text
-jsTests = T.unlines
-  [ jsTest mass height skierType' age bsl
+-- | All test vectors.
+testVectors :: [(Mass, Height, SkierType, Age, Bsl, Maybe Double)]
+testVectors =
+  [ (mass, height, skierType', age, bsl, din mass height skierType' age bsl)
   | mass <- [MassA .. MassM]
+  --, let height = HeightH
+  --, let skierType' = SkierType2
+  --, let age = Age1
+  --, let bsl = Bsl5
   , height <- [HeightH .. HeightM]
   , skierType' <- [SkierType1Minus .. SkierType3Plus]
   , age <- [Age0 .. Age2]
@@ -274,43 +278,57 @@ jsTests = T.unlines
   ]
 
 
--- | Generate a single Javascript testcase.
-jsTest :: Mass -> Height -> SkierType -> Age -> Bsl -> Text
-jsTest mass height skierType age bsl =
-  "if (" <> callCalculateDin
-    <>  " != "
-    <>  encodedResult
-    <>  ") { console.log(\"FAIL: "
-    <>  T.intercalate " " 
-    [ "din"
-    , showT mass
-    , showT height
-    , showT skierType
-    , showT age
-    , showT bsl
-    , "=="
-    , showT result
-    , "but got "
+-- | Generate all Javascript testcases.
+jsTests :: Text
+jsTests = T.unlines $
+  [ "/*"
+  , "Test vectors for ISO11088-2018, aka. alpine ski bindings DIN settings."
+  , ""
+  , "Tests expect the following function under test:"
+  , ""
+  , "  function calculateDin(mass, height, skierType, age, bsl)"
+  , ""
+  , "where arguments are encoded integers:"
+  , ""
+  , "  mass:      0-12"
+  , "  height:    0-5"
+  , "  skierType: 0-4"
+  , "  age:       0-2"
+  , "  bsl:       0-7"
+  , ""
+  , "that returns the resulting DIN as either a float or a null."
+  , ""
+  , "*/"
+  , ""
+  , ""
+  , "// Table of (mass, height, skierType, age, bsl, din)"
+  , "var testVectors ="
+  , "  [ " <> T.intercalate "\n  , "
+    [ "[" <> T.intercalate ", " [encode m, encode h, encode s, encode a, encode b, result d] <> "]"
+    | (m, h, s, a, b, d) <- testVectors
     ]
-    <>  "\" + " <> callCalculateDin <> "); };"
+  , "  ]"
+  , ""
+  , ""
+  , "// Run the test on all vectors."
+  , "function runTest() {"
+  , "  for (let i = 0; i < testVectors.length; i++) {"
+  , "    let vector = testVectors[i]"
+  , "    let result = calculateDin(vector[0], vector[1], vector[2],  vector[3], vector[4])"
+  , "    if (result != vector[5]) {"
+  , "      console.log(\"FAIL:  calculateDin(\" + vector[0] + \", \" + vector[1] + \", \" + vector[2] + \", \" + vector[3] + \", \" + vector[4] + \")  Expected \" + vector[5] + \", but got \" + result + \".\")"
+  , "    }"
+  , "  }"
+  , "}"
+  , ""
+  ]
 
- where
+  where
 
-  callCalculateDin = "calculate_din("
-    <>  T.intercalate ", " 
-    [ encode mass
-    , encode height
-    , encode skierType
-    , encode age
-    , encode bsl
-    ]
-    <> ")"
-
-  result = din mass height skierType age bsl
-
-  encodedResult = case result of
-    Nothing   -> "null"
-    Just din' -> showT din'
+  result :: Maybe Double -> Text
+  result = \case
+    Nothing -> "null"
+    Just v -> showT v
 
 
 showT :: Show a => a -> Text
