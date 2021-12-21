@@ -45,7 +45,7 @@ data Mass
   | MassK  -- ^ 148-174 lbs / 67-78 kg
   | MassL  -- ^ 175-209 lbs / 79-94 kg
   | MassM  -- ^ 210+ lbs / 95+ kg
-  deriving (Show, Enum)
+  deriving (Show, Enum, Eq)
 
 
 -- | Skier's height.
@@ -97,7 +97,7 @@ data Age
   = Age0  -- ^ 9 and under.
   | Age1  -- ^ 10 - 49.
   | Age2  -- ^ 50 and older.
-  deriving (Show, Eq, Enum)
+  deriving (Show, Enum)
 
 
 -- | A DIN vector is composed of 8 DIN values corresponding to the 8 possible BSL values.
@@ -258,7 +258,7 @@ din mass height skierType age bsl = lookupDin bsl $ dinTable !! unIndex index4
   index3 = max 0 $ min 15 $ index2
 
   -- Set the index based on NOTE 1.
-  index4 | age == Age0 = index0
+  index4 | mass == MassA = index0
          | otherwise   = index3
 
 

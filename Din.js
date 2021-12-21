@@ -149,7 +149,7 @@ function calculateDin(mass, height, skierType, age, bsl) {
   let index3 = Math.max(0, Math.min(15, index2));
 
   // Set the index based on NOTE 1.
-  let index4 = age == 0 ? index0 : index3;
+  let index4 = mass == 0 ? index0 : index3;
 
   // Return the DIN setting.
   return dinTable[index4][bsl];
