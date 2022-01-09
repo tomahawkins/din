@@ -25,7 +25,7 @@ function skierCode(mass, height) {
 
 // Index for a given skier code.
 function skierCodeIndex(skierCode) {
-  return skierCode;
+  return skierCode + 1;
 }
 
 
@@ -62,29 +62,52 @@ function limitSkierType(mass, skierType) {
 
 // The DIN table.
 const dinTable =
-  [ [0.75, 0.75, 0.75, null, null, null, null, null]
-  , [1.0, 0.75, 0.75, 0.75, null, null, null, null]
-  , [1.5, 1.25, 1.25, 1.0, null, null, null, null]
-  , [2.0, 1.75, 1.5, 1.5, 1.25, null, null, null]
-  , [2.5, 2.25, 2.0, 1.75, 1.5, 1.5, null, null]
-  , [3.0, 2.75, 2.5, 2.25, 2.0, 1.75, 1.75, null]
-  , [null, 3.5, 3.0, 2.75, 2.5, 2.25, 2.0, null]
-  , [null, null, 3.5, 3.0, 3.0, 2.75, 2.5, null]
-  , [null, null, 4.5, 4.0, 3.5, 3.5, 3.0, null]
-  , [null, null, 5.5, 5.0, 4.5, 4.0, 3.5, 3.0]
-  , [null, null, 6.5, 6.0, 5.5, 5.0, 4.5, 4.0]
-  , [null, null, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0]
-  , [null, null, null, 8.5, 8.0, 7.0, 6.5, 6.0]
-  , [null, null, null, 10.0, 9.5, 8.5, 8.0, 7.5]
-  , [null, null, null, 11.5, 11.0, 10.0, 9.5, 9.0]
-  , [null, null, null, null, null, 12.0, 11.0, 10.5]
+  // -
+  [ [5, 18, [null, null, null, null, null, null, null, null]]
+  // A
+  , [8, 29, [0.75, 0.75, 0.75, null, null, null, null, null]]
+  // B
+  , [11, 40, [1.0, 0.75, 0.75, 0.75, null, null, null, null]]
+  // C
+  , [14, 52, [1.5, 1.25, 1.25, 1.0, null, null, null, null]]
+  // D
+  , [17, 64, [2.0, 1.75, 1.5, 1.5, 1.25, null, null, null]]
+  // E
+  , [20, 75, [2.5, 2.25, 2.0, 1.75, 1.5, 1.5, null, null]]
+  // F
+  , [23, 87, [3.0, 2.75, 2.5, 2.25, 2.0, 1.75, 1.75, null]]
+  // G
+  , [27, 102, [null, 3.5, 3.0, 2.75, 2.5, 2.25, 2.0, null]]
+  // H
+  , [31, 120, [null, null, 3.5, 3.0, 3.0, 2.75, 2.5, null]]
+  // I
+  , [37, 141, [null, null, 4.5, 4.0, 3.5, 3.5, 3.0, null]]
+  // J
+  , [43, 165, [null, null, 5.5, 5.0, 4.5, 4.0, 3.5, 3.0]]
+  // K
+  , [50, 194, [null, null, 6.5, 6.0, 5.5, 5.0, 4.5, 4.0]]
+  // L
+  , [58, 229, [null, null, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0]]
+  // M
+  , [67, 271, [null, null, null, 8.5, 8.0, 7.0, 6.5, 6.0]]
+  // N
+  , [78, 320, [null, null, null, 10.0, 9.5, 8.5, 8.0, 7.5]]
+  // O
+  , [91, 380, [null, null, null, 11.5, 11.0, 10.0, 9.5, 9.0]]
+  // -
+  , [105, 452, [null, null, null, null, null, 12.0, 11.0, 10.5]]
+  // -
+  , [121, 520, [null, null, null, null, null, null, null, null]]
+  // -
+  , [137, 588, [null, null, null, null, null, null, null, null]]
   ];
 
 
 /*
-Calculate DIN given mass, height, skier type, age, and BSL.
+Calculate release torques and DIN given mass, height, skier type, age, and BSL.
 
-Returns either the DIN value or a null.
+Returns [twist, forwardLean, din], where twist and forwardLean are in Nm and
+din is either a value or a null.
 
 Arguments are encoded as integers:
 
@@ -145,14 +168,14 @@ function calculateDin(mass, height, skierType, age, bsl) {
   // Adjust the index for age.
   let index2 = adjustIndexForAge(age, index1);
 
-  // Limit the index to the range of the table.
-  let index3 = Math.max(0, Math.min(15, index2));
-
   // Set the index based on NOTE 1.
-  let index4 = mass == 0 ? index0 : index3;
+  let index3 = mass == 0 ? index0 : index2;
 
-  // Return the DIN setting.
-  return dinTable[index4][bsl];
+  // Select row from table.
+  let row = dinTable[index3];
+
+  // Return [twist, forwardLean, and the DIN setting].
+  return [row[0], row[1], row[2][bsl]];
 
 }
 

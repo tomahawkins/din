@@ -103,15 +103,27 @@ data Age
 -- | A DIN vector is composed of 8 DIN values corresponding to the 8 possible BSL values.
 --   The DIN table is made up of a list of DIN vectors.
 newtype DinVector = DinVector
-  ( Maybe Double
-  , Maybe Double
-  , Maybe Double
-  , Maybe Double
-  , Maybe Double
-  , Maybe Double
-  , Maybe Double
-  , Maybe Double
+  ( Maybe Din
+  , Maybe Din
+  , Maybe Din
+  , Maybe Din
+  , Maybe Din
+  , Maybe Din
+  , Maybe Din
+  , Maybe Din
   )
+
+
+-- | Din value.
+newtype Din = Din { unDin :: Double } deriving (Num, Fractional, Eq, Ord)
+
+
+-- | Twist torque in Nm.
+newtype Twist = Twist { unTwist :: Int } deriving (Num, Eq, Ord)
+
+
+-- | Forward lean torque in Nm.
+newtype ForwardLean = ForwardLean { unForwardLean :: Int } deriving (Num, Eq, Ord)
 
 
 -- | The index into the DIN table: 0 - 15.
@@ -155,21 +167,21 @@ skierCode m h = min (skierCodeMass m) (skierCodeHeight h)
 -- | Index for skier code.
 skierCodeIndex :: SkierCode -> Index
 skierCodeIndex = \case
-  A -> 0
-  B -> 1
-  C -> 2
-  D -> 3
-  E -> 4
-  F -> 5
-  G -> 6
-  H -> 7
-  I -> 8
-  J -> 9
-  K -> 10
-  L -> 11
-  M -> 12
-  N -> 13
-  O -> 14
+  A -> 1
+  B -> 2
+  C -> 3
+  D -> 4
+  E -> 5
+  F -> 6
+  G -> 7
+  H -> 8
+  I -> 9
+  J -> 10
+  K -> 11
+  L -> 12
+  M -> 13
+  N -> 14
+  O -> 15
 
 
 -- | Adjust index based on age.
@@ -199,7 +211,7 @@ limitSkierType mass skierType = case (mass, skierType) of
 
 
 -- | Lookup the final DIN setting given a BSL and a DIN vector.
-lookupDin :: Bsl -> DinVector -> Maybe Double
+lookupDin :: Bsl -> DinVector -> Maybe Din
 lookupDin bsl vec = case bsl of
   Bsl0 -> din0
   Bsl1 -> din1
@@ -213,35 +225,67 @@ lookupDin bsl vec = case bsl of
 
 
 -- | The DIN table.
-dinTable :: [DinVector]
+dinTable :: [(Twist, ForwardLean, DinVector)]
 dinTable =
-  [ DinVector (j 0.75, j 0.75, j 0.75, n, n, n, n, n)
-  , DinVector (j 1.0, j 0.75, j 0.75, j 0.75, n, n, n, n)
-  , DinVector (j 1.5, j 1.25, j 1.25, j 1.0, n, n, n, n)
-  , DinVector (j 2.0, j 1.75, j 1.5, j 1.5, j 1.25, n, n, n)
-  , DinVector (j 2.5, j 2.25, j 2.0, j 1.75, j 1.5, j 1.5, n, n)
-  , DinVector (j 3.0, j 2.75, j 2.5, j 2.25, j 2.0, j 1.75, j 1.75, n)
-  , DinVector (n, j 3.5, j 3.0, j 2.75, j 2.5, j 2.25, j 2.0, n)
-  , DinVector (n, n, j 3.5, j 3.0, j 3.0, j 2.75, j 2.5, n)
-  , DinVector (n, n, j 4.5, j 4.0, j 3.5, j 3.5, j 3.0, n)
-  , DinVector (n, n, j 5.5, j 5.0, j 4.5, j 4.0, j 3.5, j 3.0)
-  , DinVector (n, n, j 6.5, j 6.0, j 5.5, j 5.0, j 4.5, j 4.0)
-  , DinVector (n, n, j 7.5, j 7.0, j 6.5, j 6.0, j 5.5, j 5.0)
-  , DinVector (n, n, n, j 8.5, j 8.0, j 7.0, j 6.5, j 6.0)
-  , DinVector (n, n, n, j 10.0, j 9.5, j 8.5, j 8.0, j 7.5)
-  , DinVector (n, n, n, j 11.5, j 11.0, j 10.0, j 9.5, j 9.0)
-  , DinVector (n, n, n, n, n, j 12.0, j 11.0, j 10.5)
+  -- -
+  [ r 5 18 $ DinVector (n, n, n, n, n, n, n, n)
+  -- A
+  , r 8 29 $ DinVector (j 0.75, j 0.75, j 0.75, n, n, n, n, n)
+  -- B
+  , r 11 40 $ DinVector (j 1.0, j 0.75, j 0.75, j 0.75, n, n, n, n)
+  -- C
+  , r 14 52 $ DinVector (j 1.5, j 1.25, j 1.25, j 1.0, n, n, n, n)
+  -- D
+  , r 17 64 $ DinVector (j 2.0, j 1.75, j 1.5, j 1.5, j 1.25, n, n, n)
+  -- E
+  , r 20 75 $ DinVector (j 2.5, j 2.25, j 2.0, j 1.75, j 1.5, j 1.5, n, n)
+  -- F
+  , r 23 87 $ DinVector (j 3.0, j 2.75, j 2.5, j 2.25, j 2.0, j 1.75, j 1.75, n)
+  -- G
+  , r 27 102 $ DinVector (n, j 3.5, j 3.0, j 2.75, j 2.5, j 2.25, j 2.0, n)
+  -- H
+  , r 31 120 $ DinVector (n, n, j 3.5, j 3.0, j 3.0, j 2.75, j 2.5, n)
+  -- I
+  , r 37 141 $ DinVector (n, n, j 4.5, j 4.0, j 3.5, j 3.5, j 3.0, n)
+  -- J
+  , r 43 165 $ DinVector (n, n, j 5.5, j 5.0, j 4.5, j 4.0, j 3.5, j 3.0)
+  -- K
+  , r 50 194 $ DinVector (n, n, j 6.5, j 6.0, j 5.5, j 5.0, j 4.5, j 4.0)
+  -- L
+  , r 58 229 $ DinVector (n, n, j 7.5, j 7.0, j 6.5, j 6.0, j 5.5, j 5.0)
+  -- M
+  , r 67 271 $ DinVector (n, n, n, j 8.5, j 8.0, j 7.0, j 6.5, j 6.0)
+  -- N
+  , r 78 320 $ DinVector (n, n, n, j 10.0, j 9.5, j 8.5, j 8.0, j 7.5)
+  -- O
+  , r 91 380 $ DinVector (n, n, n, j 11.5, j 11.0, j 10.0, j 9.5, j 9.0)
+  -- -
+  , r 105 452 $ DinVector (n, n, n, n, n, j 12.0, j 11.0, j 10.5)
+  -- -
+  , r 121 520 $ DinVector (n, n, n, n, n, n, n, n)
+  -- -
+  , r 137 588 $ DinVector (n, n, n, n, n, n, n, n)
   ]
 
  where
 
   j = Just
   n = Nothing
+  r :: Twist -> ForwardLean -> DinVector -> (Twist, ForwardLean, DinVector)
+  r t f d = (t, f, d)
 
 
--- | Calculate DIN given mass, height, skier type, age, and BSL.
-din :: Mass -> Height -> SkierType -> Age -> Bsl -> Maybe Double
-din mass height skierType age bsl = lookupDin bsl $ dinTable !! unIndex index4
+-- | Calculate the twist torque, forward lean torque, and DIN,
+--   given mass, height, skier type, age, and BSL.
+din
+  :: Mass
+  -> Height
+  -> SkierType
+  -> Age
+  -> Bsl
+  -> (Twist, ForwardLean, Maybe Din)
+din mass height skierType age bsl =
+  (twist, forwardLean, lookupDin bsl dinVector)
 
  where
 
@@ -254,90 +298,129 @@ din mass height skierType age bsl = lookupDin bsl $ dinTable !! unIndex index4
   -- Adjust the index for age.
   index2 = adjustIndexForAge age index1
 
-  -- Limit the index to the range of the table.
-  index3 = max 0 $ min 15 $ index2
-
   -- Set the index based on NOTE 1.
-  index4 | mass == MassA = index0
-         | otherwise   = index3
+  index3 | mass == MassA = index0
+         | otherwise     = index2
+
+  -- Lookup the twist and forward lean torques and the din vector.
+  (twist, forwardLean, dinVector) = dinTable !! unIndex index3
 
 
 -- | All test vectors.
-testVectors :: [(Mass, Height, SkierType, Age, Bsl, Maybe Double)]
+testVectors
+  :: [(Mass, Height, SkierType, Age, Bsl, (Twist, ForwardLean, Maybe Din))]
 testVectors =
   [ (mass, height, skierType', age, bsl, din mass height skierType' age bsl)
-  | mass <- [MassA .. MassM]
-  --, let height = HeightH
-  --, let skierType' = SkierType2
-  --, let age = Age1
-  --, let bsl = Bsl5
-  , height <- [HeightH .. HeightM]
+  | mass       <- [MassA .. MassM]
+--, let height = HeightH
+--, let skierType' = SkierType2
+--, let age = Age1
+--, let bsl = Bsl5
+  , height     <- [HeightH .. HeightM]
   , skierType' <- [SkierType1Minus .. SkierType3Plus]
-  , age <- [Age0 .. Age2]
-  , bsl <- [Bsl0 .. Bsl7]
+  , age        <- [Age0 .. Age2]
+  , bsl        <- [Bsl0 .. Bsl7]
   ]
 
 
 -- | Generate all Javascript testcases.
 jsTests :: Text
-jsTests = T.unlines $
-  [ "/*"
-  , "Test vectors for ISO11088-2018, aka. alpine ski bindings DIN settings."
-  , ""
-  , "Tests expect the following function under test:"
-  , ""
-  , "  function calculateDin(mass, height, skierType, age, bsl)"
-  , ""
-  , "where arguments are encoded integers:"
-  , ""
-  , "  mass:      0-12"
-  , "  height:    0-5"
-  , "  skierType: 0-4"
-  , "  age:       0-2"
-  , "  bsl:       0-7"
-  , ""
-  , "that returns the resulting DIN as either a float or a null."
-  , ""
-  , "*/"
-  , ""
-  , ""
-  , "// Table of (mass, height, skierType, age, bsl, din)"
-  , "var testVectors ="
-  , "  [ " <> T.intercalate "\n  , "
-    [ "[" <> T.intercalate ", " [encode m, encode h, encode s, encode a, encode b, result d] <> "]"
-    | (m, h, s, a, b, d) <- testVectors
-    ]
-  , "  ]"
-  , ""
-  , ""
-  , "// Run the test on all vectors."
-  , "function runTest() {"
-  , "  let failCount = 0;"
-  , "  for (let i = 0; i < testVectors.length; i++) {"
-  , "    let vector = testVectors[i];"
-  , "    let result = calculateDin(vector[0], vector[1], vector[2],  vector[3], vector[4]);"
-  , "    if (result != vector[5]) {"
-  , "      console.log(\"FAIL:  calculateDin(\" + vector[0] + \", \" + vector[1] + \", \" + vector[2] + \", \" + vector[3] + \", \" + vector[4] + \")  Expected \" + vector[5] + \", but got \" + result + \".\");"
-  , "      failCount++;"
-  , "    }"
-  , "  }"
-  , "  console.log(\"Total test count: \" + testVectors.length);"
-  , "  if (failCount > 0) {"
-  , "    console.log(\"Total tests failed: \" + failCount);"
-  , "  }"
-  , "  else {"
-  , "    console.log(\"All tests passed.\");"
-  , "  }"
-  , "}"
-  , ""
-  ]
+jsTests =
+  T.unlines
+    $ [ "/*"
+      , "Test vectors for ISO11088-2018, aka. alpine ski bindings DIN settings."
+      , ""
+      , "Tests expect the following function under test:"
+      , ""
+      , "  function calculateDin(mass, height, skierType, age, bsl)"
+      , ""
+      , "where arguments are encoded integers:"
+      , ""
+      , "  mass:      0-12"
+      , "  height:    0-5"
+      , "  skierType: 0-4"
+      , "  age:       0-2"
+      , "  bsl:       0-7"
+      , ""
+      , "that returns [twist, forwardLean, din]"
+      , "where the torques are in Nm and the DIN is either a float or a null."
+      , ""
+      , "*/"
+      , ""
+      , ""
+      , "// Table of [mass, height, skierType, age, bsl, [twist, forwardLean, din]]"
+      , "var testVectors ="
+      , "  [ " <> T.intercalate
+        "\n  , "
+        [ "["
+          <> T.intercalate
+               ", "
+               [encode m, encode h, encode s, encode a, encode b, result d]
+          <> "]"
+        | (m, h, s, a, b, d) <- testVectors
+        ]
+      , "  ]"
+      , ""
+      , ""
+      , "// Run tests for just din values."
+      , "function runTestsDin() {"
+      , "  let failCount = 0;"
+      , "  for (let i = 0; i < testVectors.length; i++) {"
+      , "    let vector = testVectors[i];"
+      , "    let expected = vector[5];"
+      , "    let result = calculateDin(vector[0], vector[1], vector[2],  vector[3], vector[4]);"
+      , "    if (result[2] != expected[2]) {"
+      , "      console.log(\"FAIL:  calculateDin(\" + vector[0] + \", \" + vector[1] + \", \" + vector[2] + \", \" + vector[3] + \", \" + vector[4] + \")  Expected \" + expected[2] + \", but got \" + result[2] + \".\");"
+      , "      failCount++;"
+      , "    }"
+      , "  }"
+      , "  console.log(\"Total test count: \" + testVectors.length);"
+      , "  if (failCount > 0) {"
+      , "    console.log(\"Total tests failed: \" + failCount);"
+      , "  }"
+      , "  else {"
+      , "    console.log(\"All tests passed.\");"
+      , "  }"
+      , "}"
+      , ""
+      , ""
+      , "// Run tests for torques and din values."
+      , "function runTestsAll() {"
+      , "  let failCount = 0;"
+      , "  for (let i = 0; i < testVectors.length; i++) {"
+      , "    let vector = testVectors[i];"
+      , "    let expected = vector[5];"
+      , "    let result = calculateDin(vector[0], vector[1], vector[2],  vector[3], vector[4]);"
+      , "    if (result[0] != expected[0] || result[1] != expected[1] || result[2] != expected[2]) {"
+      , "      console.log(\"FAIL:  calculateDin(\" + vector[0] + \", \" + vector[1] + \", \" + vector[2] + \", \" + vector[3] + \", \" + vector[4] + \")  Expected \" + expected + \", but got \" + result + \".\");"
+      , "      failCount++;"
+      , "    }"
+      , "  }"
+      , "  console.log(\"Total test count: \" + testVectors.length);"
+      , "  if (failCount > 0) {"
+      , "    console.log(\"Total tests failed: \" + failCount);"
+      , "  }"
+      , "  else {"
+      , "    console.log(\"All tests passed.\");"
+      , "  }"
+      , "}"
+      , ""
+      ]
 
-  where
+ where
 
-  result :: Maybe Double -> Text
-  result = \case
-    Nothing -> "null"
-    Just v -> showT v
+  result :: (Twist, ForwardLean, Maybe Din) -> Text
+  result (t, f, d) =
+    "["
+      <> showT (unTwist t)
+      <> ","
+      <> showT (unForwardLean f)
+      <> ","
+      <> (case d of
+           Nothing -> "null"
+           Just v  -> showT $ unDin v
+         )
+      <> "]"
 
 
 showT :: Show a => a -> Text
